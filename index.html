@@ -35,18 +35,8 @@ body {
 
     var colour_list = ['rgb(255,255,229)', 'rgb(247,252,185)', 'rgb(217,240,163)', 'rgb(173,221,142)', 'rgb(120,198,121)', 'rgb(65,171,93)', 'rgb(35,132,67)', 'rgb(0,104,55)', 'rgb(0,69,41)'];
 
-
     var width = 980,
         height = 670;
-
-    var spacer = 34;
-
-    // If you want a mercator projection rather, uncomment this one and comment out the one below.
-    // var projection = d3.geo.mercator()
-    //     .center([24.7, -29.2])
-    //     .scale(2300)
-    //     .translate([500, 350]);
-
 
     var projection = d3.geo.albers()
         .center([24.7, -29.2])
@@ -111,11 +101,8 @@ body {
         var max_population = d3.max(population_map.values());
         var map_color = d3.scale.quantize().domain([0, max_population]).range(colour_list);
 
-        zajson_wards = zajson.objects.wards;
-        zajson_prov = zajson.objects.prov;
-
         var prov_map = prov.append("path");
-        prov_map.datum(topojson.mesh(zajson, zajson_prov, function(a, b) {
+        prov_map.datum(topojson.mesh(zajson, zajson.objects.prov, function(a, b) {
             //return true;
             return a !== b;
         }));
@@ -124,7 +111,7 @@ body {
             .attr("class", "prov_map");
 
         var ward_map = wards.selectAll(".ward_map")
-            .data(topojson.feature(zajson, zajson_wards).features);
+            .data(topojson.feature(zajson, zajson.objects.wards).features);
 
         ward_map.enter().append("path");
 
