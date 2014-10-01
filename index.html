@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+body {
+    background: #666;
+    color: #333;
+    font-family: sans-serif;
+}
+.tooltip {
+    background-color: #fff;
+    border: 1px solid #555;
+    padding: 5px;
+}
+.ward_map {
+    stroke-width: 0.1;
+    stroke-linejoin: round;
+    stroke: #999;
+}
+.prov_map {
+    fill: none;
+    stroke-width: 1;
+    stroke: #666;
+}
+</style>
+
+</head>
+
+<body>
+    <div id="svg">
+    </div>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script src="http://d3js.org/queue.v1.min.js"></script>
+    <script>
+
+    var colour_list = ['rgb(255,255,229)', 'rgb(247,252,185)', 'rgb(217,240,163)', 'rgb(173,221,142)', 'rgb(120,198,121)', 'rgb(65,171,93)', 'rgb(35,132,67)', 'rgb(0,104,55)', 'rgb(0,69,41)'];
+
+
+    var width = 980,
+        height = 670;
+
+    var spacer = 34;
+
+    // If you want a mercator projection rather, uncomment this one and comment out the one below.
+    // var projection = d3.geo.mercator()
+    //     .center([24.7, -29.2])
+    //     .scale(2300)
+    //     .translate([500, 350]);
+
+
+    var projection = d3.geo.albers()
+        .center([24.7, -29.2])
+        .rotate([0, 0, 12])
+        .parallels([-22.1, -34.1])
+        .scale(3000)
+        .translate([200, 600]);
+
+    var path = d3.geo.path()
+        .projection(projection);
+
+    var transMatrix = [1, 0, 0, 1, 0, 0];
+
+    var zoom = d3.behavior.zoom()
+        .translate([0, 0])
+        .scale(1)
+        .on("zoom", zoomed);
+
+    var svg = d3.select("#svg").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .call(zoom).on("dblclick.zoom", null);
+
+    var za_matrix = svg.append("g")
+        .attr("id", "za_matrix")
+        .attr("transform", "matrix(1 0 0 1 0 0)");
+
+    var za = za_matrix.append("g")
+        .attr("id", "za");
+
+    var wards = za.append("g")
+        .attr("id", "wards");
+
+    var prov = za.append("g")
+        .attr("id", "prov");
+
+    var tooltip = d3.select("body")
+        .append("div")
+        .style("position", "absolute")
+        .style("z-index", "10")
+        .style("visibility", "hidden")
+        .attr("class", "tooltip")
+        .text("a simple tooltip");
+
+    function zoomed() {
+        transMatrix[0] = d3.event.scale;
+        transMatrix[3] = d3.event.scale;
+        transMatrix[4] = d3.event.translate[0];
+        transMatrix[5] = d3.event.translate[1];
+        za_matrix.attr("transform", "matrix(" + transMatrix.join(' ') + ")");
+        prov.selectAll(".prov_map").style("stroke-width", 1 / transMatrix[0] + "px");
+        wards.selectAll(".ward_map").style("stroke-width", 0.2 / transMatrix[0] + "px");
+    }
+
+    function draw_map(error, zajson, population) {
+
+        population_map = d3.map();
+        population.forEach(function(d) {
+            population_map.set(d.Ward, +d.Population);
+        });
+
+        var max_population = d3.max(population_map.values());
+        var map_color = d3.scale.quantize().domain([0, max_population]).range(colour_list);
+
+        zajson_wards = zajson.objects.wards;
+        zajson_prov = zajson.objects.prov;
+
+        var prov_map = prov.append("path");
+        prov_map.datum(topojson.mesh(zajson, zajson_prov, function(a, b) {
+            //return true;
+            return a !== b;
+        }));
+
+        prov_map.attr("d", path)
+            .attr("class", "prov_map");
+
+        var ward_map = wards.selectAll(".ward_map")
+            .data(topojson.feature(zajson, zajson_wards).features);
+
+        ward_map.enter().append("path");
+
+        ward_map.style("fill", function(e, i) {
+            return map_color(population_map.get(e.properties.WARD_ID));
+        })
+            .attr("d", path)
+            .attr("class", "ward_map")
+            .on("mouseover", function(d) {
+                tooltip.style("visibility", "visible");
+                tooltip.html("Ward: " + d.properties.WARD_ID + "<br>" + "Population: " + population_map.get(d.properties.WARD_ID));
+            })
+            .on("mousemove", function() {
+                return tooltip
+                	.style("top", (d3.event.pageY -10 + "px"))
+                	.style("left", (d3.event.pageX +10 + "px"));
+            })
+            .on("mouseout", function() {
+                return tooltip.style("visibility", "hidden");
+            });
+
+    }
+    queue()
+        .defer(d3.json, 'data/za.json')
+        .defer(d3.csv, 'data/population.csv')
+        .await(draw_map);
+    </script>
+</body>
+
+</html>
