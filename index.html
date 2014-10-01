@@ -103,7 +103,6 @@ body {
 
         var prov_map = prov.append("path");
         prov_map.datum(topojson.mesh(zajson, zajson.objects.prov, function(a, b) {
-            //return true;
             return a !== b;
         }));
 
