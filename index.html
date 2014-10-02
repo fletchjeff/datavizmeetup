@@ -64,13 +64,10 @@ body {
         .attr("id", "za_matrix")
         .attr("transform", "matrix(1 0 0 1 0 0)");
 
-    var za = za_matrix.append("g")
-        .attr("id", "za");
-
-    var wards = za.append("g")
+    var wards = za_matrix.append("g")
         .attr("id", "wards");
 
-    var prov = za.append("g")
+    var prov = za_matrix.append("g")
         .attr("id", "prov");
 
     var tooltip = d3.select("body")
