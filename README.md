@@ -27,9 +27,6 @@ Shrink with MapShaper
 
 <http://en.wikipedia.org/wiki/Coastline_paradox>
 
-Population Data
-
-<http://interactive.statssa.gov.za/superweb/login.do>
 
 ##Part 2: Making it look neat ##
 
@@ -44,6 +41,10 @@ SVG styling
 <http://www.w3schools.com/svg/default.asp>
 
 ##Part 3: Adding colour##
+
+Population Data
+
+<http://interactive.statssa.gov.za/superweb/login.do>
 
 Use color brewer
 
